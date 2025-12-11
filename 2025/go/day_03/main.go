@@ -36,42 +36,35 @@ func calculatePartOne(banks []string) {
 			}
 		}
 		sum += biggest
-		fmt.Println("Biggest: ", biggest)
 	}
-	fmt.Println("Sum: ", sum)
+	fmt.Println("Part One Sum:", sum)
 }
 
 func getBiggestDigitIndex(input string, start, end int) (index int) {
 	biggestDigit := 0
 	for i := start; i < end; i++ {
 		elem, _ := strconv.Atoi(string(input[i]))
-		fmt.Println("i:", i, "elem:", elem)
 		if elem > biggestDigit {
 			biggestDigit = elem
 			index = i
 		}
 	}
-	fmt.Println("final index:", index)
 	return index
 }
 
 func calculatePartTwo(banks []string) {
 	foundTunings := []string{}
 	for _, bank := range banks {
-		fmt.Println("\ncalc bank")
-		fmt.Println(bank)
 		remainder := 11
 		finalTuning := ""
 		windowStart := 0
 
 		for remainder >= 0 {
 			windowEnd := len(bank) - remainder
-			fmt.Println("windowEnd:", windowEnd)
 
 			idx := getBiggestDigitIndex(bank, windowStart, windowEnd)
 
 			// exit early
-			fmt.Println("is early: ", idx, windowEnd)
 			if idx == windowEnd-1 {
 				finalTuning += bank[idx:]
 				break
@@ -79,16 +72,13 @@ func calculatePartTwo(banks []string) {
 			}
 
 			finalTuning += string(bank[idx])
-			fmt.Println(finalTuning)
 
 			remainder -= 1
 			windowStart = idx + 1
 
 		}
 		foundTunings = append(foundTunings, finalTuning)
-		fmt.Println(finalTuning)
 	}
-	fmt.Println(foundTunings)
 	sum := 0
 	for _, tuning := range foundTunings {
 		val, _ := strconv.Atoi(tuning)
@@ -113,12 +103,3 @@ func main() {
 	calculatePartOne(banks)
 	calculatePartTwo(banks)
 }
-
-// 234234234234278
-// 2342 34234234278
-// 234 23 4234234278
-
-// 8181 81911112111
-// 8 8181911112111
-// 8 8 81911112111
-// 8 8 8  9 11112111
