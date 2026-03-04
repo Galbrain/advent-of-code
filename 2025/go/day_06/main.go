@@ -22,6 +22,22 @@ func parseFile(file io.Reader) (total [][]string) {
 	return total
 }
 
+func parseFileTwo(file io.Reader) (chars [][]rune) {
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		currentRunes := []rune{}
+		for _, c := range line {
+			currentRunes = append(currentRunes, c)
+		}
+		chars = append(chars, currentRunes)
+	}
+
+	return chars
+}
+
 func printSlice[T any](slice []T, title string) {
 	fmt.Printf("\n===== %v =====\n", title)
 	for _, l := range slice {
@@ -48,6 +64,73 @@ func transformData(rawValues [][]string) (values [][]int, ops []string) {
 	return values, ops
 }
 
+func transformDataTwo(rawValues [][]rune) (words [][]string) {
+	op := []string{}
+
+	maxRow := len(rawValues) - 1
+	maxCol := len(rawValues[0]) - 1
+
+col:
+	for j := maxCol; j >= 0; j-- {
+		// aggregate current number
+		currentWord := ""
+
+		// walk through col
+		i := 0
+		for i <= maxCol {
+			currRune := rawValues[i][j]
+
+			if currRune == '+' || currRune == '*' {
+				op = append(op, currentWord)
+				op = append(op, string(currRune))
+				words = append(words, op)
+				op = []string{}
+				continue col
+			}
+
+			if currRune != ' ' {
+				currentWord += string(currRune)
+			}
+
+			if i == maxRow {
+				op = append(op, currentWord)
+				continue col
+			}
+			i++
+		}
+		op = append(op, currentWord)
+	}
+	return words
+}
+
+func calcTwo(rawOperation [][]string) (total int) {
+
+opLoop:
+	for _, op := range rawOperation {
+		nums := []int{}
+
+	l:
+		for _, w := range op {
+			if w == "+" {
+				total += add(nums)
+				continue opLoop
+			}
+			if w == "*" {
+				total += multiply(nums)
+				continue opLoop
+			}
+
+			num, err := strconv.Atoi(w)
+			if err != nil {
+				continue l
+			}
+			nums = append(nums, num)
+		}
+
+	}
+	return total
+}
+
 func add(values []int) (sum int) {
 	for _, v := range values {
 		sum += v
@@ -71,26 +154,39 @@ func main() {
 	if err != nil {
 		fmt.Println("Error opening file: ", err)
 	}
+	defer file.Close()
 
-	rawValues := parseFile(file)
-	printSlice(rawValues, "Raw Values")
+	if false {
 
-	values, ops := transformData(rawValues)
-	printSlice(values, "Values")
-	printSlice(ops, "ops")
+		rawValues := parseFile(file)
+		printSlice(rawValues, "Raw Values")
 
-	totalSum := 0
-	for col := range len(values[0]) {
-		currentCol := []int{}
-		for row := range len(values) {
-			currentCol = append(currentCol, values[row][col])
+		values, ops := transformData(rawValues)
+		// printSlice(values, "Values")
+		// printSlice(ops, "ops")
+
+		totalSum := 0
+		for col := range len(values[0]) {
+			currentCol := []int{}
+			for row := range len(values) {
+				currentCol = append(currentCol, values[row][col])
+			}
+
+			if ops[col] == "+" {
+				totalSum += add(currentCol)
+			} else {
+				totalSum += multiply(currentCol)
+			}
 		}
-
-		if ops[col] == "+" {
-			totalSum += add(currentCol)
-		} else {
-			totalSum += multiply(currentCol)
-		}
+		fmt.Println("Total sum: ", totalSum)
 	}
-	fmt.Println("Total sum: ", totalSum)
+
+	// === Part Two ===
+	fmt.Println("\nStarting Part Two")
+	rawRunes := parseFileTwo(file)
+
+	rawOperations := transformDataTwo(rawRunes)
+	totalTwo := calcTwo(rawOperations)
+	fmt.Println("Total Part Two: ", totalTwo)
+
 }
