@@ -26,34 +26,49 @@ func printField(field [][]string) {
 	}
 }
 
-func simulateBeams(field [][]string) (totalSplits int) {
+type Node struct {
+	name    int
+	pos     int
+	childs  []int
+	visited bool
+}
 
-	beamLocations := make(map[int]struct{})
+func createGraph(field [][]string) (totalSplits int) {
+	graph := []Node{}
+
 	firstBeamLocation := slices.Index(field[0], "S")
-	beamLocations[firstBeamLocation] = struct{}{}
-	fmt.Println("Starting Beam at position: ", beamLocations)
+	graph = append(graph, Node{name: 0, pos: firstBeamLocation})
+
+	fmt.Println("Starting Beam at position: ", graph)
 	maxRowLen := len(field[0]) - 1
 
 	for _, row := range field {
 		// check all beam locations for splitter
-		for k := range beamLocations {
-			if row[k] == "^" {
+		for _, node := range graph {
+			if row[node.pos] == "^" {
+				// calc and track beams
 				totalSplits++
-				before := k - 1
+				before := node.pos - 1
+
+				// safety clamp
 				if before < 0 {
 					before = 0
 				}
-				after := k + 1
+				after := node.pos + 1
 				if after > maxRowLen {
 					after = maxRowLen
 				}
-				beamLocations[before] = struct{}{}
-				beamLocations[after] = struct{}{}
-				delete(beamLocations, k)
+
+				// expand graph
+				node.childs = append(node.childs, before, after)
+				graph = append(graph, Node{name: before})
+				graph = append(graph, Node{name: after})
+
 			}
 
 		}
 	}
+	fmt.Println(graph)
 
 	return totalSplits
 }
@@ -71,6 +86,6 @@ func main() {
 	field := parseData(file)
 	printField(field)
 
-	totalSplits := simulateBeams(field)
+	totalSplits := createGraph(field)
 	fmt.Println("Part One - Total Splits: ", totalSplits)
 }
